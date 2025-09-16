@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+   
+    <meta charset="UTF-8">
+    <title>Kaart met Zoekfunctie</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+     
+     <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+     </style>
+</head>
+  <body>
+    <div id="map"></div>  
+
+    <script>
+        // Kaart aanmaken, standaard gecentreerd
+        const map = L.map('map').setView([51.1942, 5.9875], 13);
+
+        // Basiskaart
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+
+        // Groep voor alle markers
+        const markersGroup = L.featureGroup().addTo(map);
+
+        // Functie om marker toe te voegen
+        function addMarker(lat, lon, naam) {
+            const marker = L.marker([parseFloat(lat), parseFloat(lon)])
+            .bindPopup(naam);
+            markersGroup.addLayer(marker);
+        }
+
+        // Vaste marker toevoegen
+        addMarker(51.1924835, 6.0157445, "<b>Marathonlaan 4</b><br>Roermond");
+
+        // Zoekfunctie via Nominatim
+        async function getMarkersForSearch(query) {
+            try {
+                const url = "https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(query);
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Fout bij ophalen data");
+                const results = await response.json();
+                if (results.length === 0) return;
+
+                results.forEach(item => {
+                    addMarker(item.lat, item.lon, item.display_name);
+        });
+
+                // Zoom automatisch naar alle markers
+                map.fitBounds(markersGroup.getBounds(), { padding: [50, 50] });
+
+        } catch (err) {
+                console.error(err);
+                alert("Kon de locaties niet ophalen.");
+        
+        }}
+
+        // Automatisch een voorbeeld zoeken
+        getMarkersForSearch("Gilde Opleingen");
+
+    </script>
+  </body>
+</html>
